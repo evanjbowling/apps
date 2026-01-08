@@ -92,10 +92,6 @@
             gap: 20px;
         }
 
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
         .box {
             background: white;
             padding: 30px;
@@ -114,13 +110,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 20px;
-        }
-
-        #digitalTime {
-            font-size: 56px;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #333;
         }
 
         svg {
@@ -164,8 +153,23 @@
 
         <div class="grid">
             <div class="box">
-                <h3>Digital Clock</h3>
-                <div id="digitalTime">12:00</div>
+                <h3>Hour Axis</h3>
+                <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
+                    <!-- Main axis line -->
+                    <line x1="30" y1="70" x2="270" y2="70" stroke="#e0e0e0" stroke-width="3"/>
+                    
+                    <!-- Tick marks and labels -->
+                    <g id="hourTicks"></g>
+                    
+                    <!-- Roman numeral labels (above) -->
+                    <g id="hourRomanLabels"></g>
+                    
+                    <!-- Pointer (below the axis, pointing up) -->
+                    <g id="hourPointer">
+                        <line x1="150" y1="90" x2="150" y2="120" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="150,90 145,100 155,100" fill="#333"/>
+                    </g>
+                </svg>
             </div>
 
             <div class="box">
@@ -189,26 +193,6 @@
             </div>
 
             <div class="box">
-                <h3>Hour Axis</h3>
-                <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
-                    <!-- Main axis line -->
-                    <line x1="30" y1="70" x2="270" y2="70" stroke="#e0e0e0" stroke-width="3"/>
-                    
-                    <!-- Tick marks and labels -->
-                    <g id="hourTicks"></g>
-                    
-                    <!-- Roman numeral labels (above) -->
-                    <g id="hourRomanLabels"></g>
-                    
-                    <!-- Pointer (below the axis, pointing up) -->
-                    <g id="hourPointer">
-                        <line x1="150" y1="90" x2="150" y2="120" stroke="#333" stroke-width="4" stroke-linecap="round"/>
-                        <polygon points="150,90 145,100 155,100" fill="#333"/>
-                    </g>
-                </svg>
-            </div>
-
-            <div class="box">
                 <h3>Minute Axis</h3>
                 <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
                     <!-- Main axis line -->
@@ -228,7 +212,7 @@
                 </svg>
             </div>
 
-            <div class="box full-width">
+            <div class="box">
                 <h3>Second Axis</h3>
                 <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
                     <!-- Main axis line -->
@@ -505,9 +489,6 @@
             const hours = parseInt(timeParts[0]);
             const minutes = parseInt(timeParts[1]);
             const seconds = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
-
-            // Update digital clock
-            document.getElementById('digitalTime').textContent = input.value;
 
             // Update analog clock
             const hourAngle = ((hours % 12) * 30 + minutes * 0.5 + seconds * (0.5/60) - 90) * Math.PI / 180;
