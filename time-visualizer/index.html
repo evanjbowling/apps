@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .time-input {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .time-input label {
+            display: block;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .time-input input[type="time"] {
+            width: 100%;
+            padding: 16px;
+            font-size: 32px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .time-input input[type="time"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .control-item label {
+            margin: 0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .roman-label {
+            font-size: 10px;
+            fill: #999;
+            font-style: italic;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .box {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+        }
+
+        .box h3 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        #digitalTime {
+            font-size: 56px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #333;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .linear-display {
+            width: 100%;
+        }
+
+        .axis-label {
+            font-size: 12px;
+            fill: #666;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="time-input">
+            <label for="timeInput">Enter Time</label>
+            <input type="time" id="timeInput" value="12:00:00" step="1">
+            <div class="controls">
+                <div class="control-item">
+                    <input type="checkbox" id="liveCheckbox">
+                    <label for="liveCheckbox">Live (updates every second)</label>
+                </div>
+                <div class="control-item">
+                    <input type="checkbox" id="romanCheckbox">
+                    <label for="romanCheckbox">Roman Numerals</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="box">
+                <h3>Digital Clock</h3>
+                <div id="digitalTime">12:00</div>
+            </div>
+
+            <div class="box">
+                <h3>Analog Clock</h3>
+                <svg id="analogClock" width="200" height="200" viewBox="0 0 200 200">
+                    <!-- Clock face -->
+                    <circle cx="100" cy="100" r="95" fill="none" stroke="#e0e0e0" stroke-width="2"/>
+                    <circle cx="100" cy="100" r="4" fill="#333"/>
+                    
+                    <!-- Minute tick marks -->
+                    <g id="minuteMarkers"></g>
+                    
+                    <!-- Hour markers -->
+                    <g id="hourMarkers"></g>
+                    
+                    <!-- Hands -->
+                    <line id="hourHand" x1="100" y1="100" x2="100" y2="60" stroke="#333" stroke-width="6" stroke-linecap="round"/>
+                    <line id="minuteHand" x1="100" y1="100" x2="100" y2="40" stroke="#667eea" stroke-width="4" stroke-linecap="round"/>
+                    <line id="secondHand" x1="100" y1="100" x2="100" y2="30" stroke="#ff0000" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+
+            <div class="box">
+                <h3>Hour Axis</h3>
+                <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
+                    <!-- Main axis line -->
+                    <line x1="30" y1="70" x2="270" y2="70" stroke="#e0e0e0" stroke-width="3"/>
+                    
+                    <!-- Tick marks and labels -->
+                    <g id="hourTicks"></g>
+                    
+                    <!-- Roman numeral labels (above) -->
+                    <g id="hourRomanLabels"></g>
+                    
+                    <!-- Pointer (below the axis, pointing up) -->
+                    <g id="hourPointer">
+                        <line x1="150" y1="90" x2="150" y2="120" stroke="#333" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="150,90 145,100 155,100" fill="#333"/>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="box">
+                <h3>Minute Axis</h3>
+                <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
+                    <!-- Main axis line -->
+                    <line x1="30" y1="70" x2="270" y2="70" stroke="#e0e0e0" stroke-width="3"/>
+                    
+                    <!-- Tick marks and labels -->
+                    <g id="minuteTicks"></g>
+                    
+                    <!-- Roman numeral labels (above) -->
+                    <g id="minuteRomanLabels"></g>
+                    
+                    <!-- Pointer (below the axis, pointing up) -->
+                    <g id="minutePointer">
+                        <line x1="150" y1="90" x2="150" y2="120" stroke="#667eea" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="150,90 145,100 155,100" fill="#667eea"/>
+                    </g>
+                </svg>
+            </div>
+
+            <div class="box full-width">
+                <h3>Second Axis</h3>
+                <svg class="linear-display" width="100%" height="160" viewBox="0 0 300 160">
+                    <!-- Main axis line -->
+                    <line x1="30" y1="70" x2="270" y2="70" stroke="#e0e0e0" stroke-width="3"/>
+                    
+                    <!-- Tick marks and labels -->
+                    <g id="secondTicks"></g>
+                    
+                    <!-- Roman numeral labels (above) -->
+                    <g id="secondRomanLabels"></g>
+                    
+                    <!-- Pointer (below the axis, pointing up) -->
+                    <g id="secondPointer">
+                        <line x1="150" y1="90" x2="150" y2="120" stroke="#ff0000" stroke-width="4" stroke-linecap="round"/>
+                        <polygon points="150,90 145,100 155,100" fill="#ff0000"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let liveInterval = null;
+        let useRomanNumerals = false;
+
+        // Roman numeral conversion
+        function toRoman(num) {
+            const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+            return romanNumerals[num - 1] || num;
+        }
+
+        // Create minute tick marks for analog clock (60 total)
+        const minuteMarkersGroup = document.getElementById('minuteMarkers');
+        for (let i = 0; i < 60; i++) {
+            const angle = (i * 6 - 90) * Math.PI / 180;
+            const isHourMark = i % 5 === 0;
+            
+            // Skip if it's an hour mark (we'll draw those separately)
+            if (!isHourMark) {
+                const x1 = 100 + Math.cos(angle) * 90;
+                const y1 = 100 + Math.sin(angle) * 90;
+                const x2 = 100 + Math.cos(angle) * 95;
+                const y2 = 100 + Math.sin(angle) * 95;
+                
+                const marker = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                marker.setAttribute('x1', x1);
+                marker.setAttribute('y1', y1);
+                marker.setAttribute('x2', x2);
+                marker.setAttribute('y2', y2);
+                marker.setAttribute('stroke', '#ccc');
+                marker.setAttribute('stroke-width', '1');
+                minuteMarkersGroup.appendChild(marker);
+            }
+        }
+
+        // Create hour markers and labels for analog clock
+        const hourMarkersGroup = document.getElementById('hourMarkers');
+        const clockLabels = [];
+        for (let i = 0; i < 12; i++) {
+            const angle = (i * 30 - 90) * Math.PI / 180;
+            const x1 = 100 + Math.cos(angle) * 85;
+            const y1 = 100 + Math.sin(angle) * 85;
+            const x2 = 100 + Math.cos(angle) * 95;
+            const y2 = 100 + Math.sin(angle) * 95;
+            
+            // Tick mark
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            marker.setAttribute('x1', x1);
+            marker.setAttribute('y1', y1);
+            marker.setAttribute('x2', x2);
+            marker.setAttribute('y2', y2);
+            marker.setAttribute('stroke', '#333');
+            marker.setAttribute('stroke-width', '2');
+            hourMarkersGroup.appendChild(marker);
+            
+            // Number label
+            const labelX = 100 + Math.cos(angle) * 75;
+            const labelY = 100 + Math.sin(angle) * 75;
+            const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            label.setAttribute('x', labelX);
+            label.setAttribute('y', labelY);
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('dominant-baseline', 'middle');
+            label.setAttribute('class', 'axis-label clock-number');
+            label.setAttribute('font-size', '14');
+            label.setAttribute('fill', '#333');
+            const number = i === 0 ? 12 : i;
+            label.textContent = number;
+            label.dataset.number = number;
+            hourMarkersGroup.appendChild(label);
+            clockLabels.push(label);
+        }
+
+        // Create tick marks for hour axis (matching analog clock: 1-12 with 5-minute divisions)
+        const hourTicksGroup = document.getElementById('hourTicks');
+        const hourAxisLabels = [];
+        const hourRomanLabelsGroup = document.getElementById('hourRomanLabels');
+        const hourRomanLabels = [];
+        // We'll create 60 tick marks representing each minute, but label only 1-12
+        for (let i = 0; i < 60; i++) {
+            const x = 30 + (i / 59) * 240;
+            const isFiveMinuteMark = i % 5 === 0;
+            const hourNumber = i === 0 ? 12 : Math.ceil(i / 5);
+            
+            // Tick mark
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.setAttribute('x1', x);
+            tick.setAttribute('y1', 70);
+            tick.setAttribute('x2', x);
+            if (isFiveMinuteMark) {
+                tick.setAttribute('y2', 55);
+                tick.setAttribute('stroke', '#333');
+                tick.setAttribute('stroke-width', '2');
+            } else {
+                tick.setAttribute('y2', 63);
+                tick.setAttribute('stroke', '#ccc');
+                tick.setAttribute('stroke-width', '1');
+            }
+            hourTicksGroup.appendChild(tick);
+            
+            // Label for 5-minute marks (1-12)
+            if (isFiveMinuteMark) {
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', x);
+                label.setAttribute('y', 45);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('class', 'axis-label');
+                label.setAttribute('font-size', '14');
+                label.textContent = hourNumber;
+                label.dataset.number = hourNumber;
+                hourTicksGroup.appendChild(label);
+                hourAxisLabels.push(label);
+
+                // Roman numeral label (initially hidden)
+                const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                romanLabel.setAttribute('x', x);
+                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('text-anchor', 'middle');
+                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.textContent = toRoman(hourNumber);
+                romanLabel.style.display = 'none';
+                hourRomanLabelsGroup.appendChild(romanLabel);
+                hourRomanLabels.push(romanLabel);
+            }
+        }
+
+        // Create tick marks for minute axis (matching analog clock: 1-12 with 5-minute divisions)
+        const minuteTicksGroup = document.getElementById('minuteTicks');
+        const minuteAxisLabels = [];
+        const minuteRomanLabelsGroup = document.getElementById('minuteRomanLabels');
+        const minuteRomanLabels = [];
+        for (let i = 0; i < 60; i++) {
+            const x = 30 + (i / 59) * 240;
+            const isFiveMinuteMark = i % 5 === 0;
+            const minuteLabel = i === 0 ? 60 : i;
+            const displayNumber = i === 0 ? 12 : Math.ceil(i / 5);
+            
+            // Tick mark
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.setAttribute('x1', x);
+            tick.setAttribute('y1', 70);
+            tick.setAttribute('x2', x);
+            if (isFiveMinuteMark) {
+                tick.setAttribute('y2', 55);
+                tick.setAttribute('stroke', '#333');
+                tick.setAttribute('stroke-width', '2');
+            } else {
+                tick.setAttribute('y2', 63);
+                tick.setAttribute('stroke', '#ccc');
+                tick.setAttribute('stroke-width', '1');
+            }
+            minuteTicksGroup.appendChild(tick);
+            
+            // Label for 5-minute marks (showing 1-12)
+            if (isFiveMinuteMark) {
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', x);
+                label.setAttribute('y', 45);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('class', 'axis-label');
+                label.setAttribute('font-size', '14');
+                label.textContent = displayNumber;
+                label.dataset.number = displayNumber;
+                minuteTicksGroup.appendChild(label);
+                minuteAxisLabels.push(label);
+
+                // Roman numeral label (initially hidden)
+                const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                romanLabel.setAttribute('x', x);
+                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('text-anchor', 'middle');
+                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.textContent = toRoman(displayNumber);
+                romanLabel.style.display = 'none';
+                minuteRomanLabelsGroup.appendChild(romanLabel);
+                minuteRomanLabels.push(romanLabel);
+            }
+        }
+
+        // Create tick marks for second axis (matching analog clock: 1-12 with 5-second divisions)
+        const secondTicksGroup = document.getElementById('secondTicks');
+        const secondAxisLabels = [];
+        const secondRomanLabelsGroup = document.getElementById('secondRomanLabels');
+        const secondRomanLabels = [];
+        for (let i = 0; i < 60; i++) {
+            const x = 30 + (i / 59) * 240;
+            const isFiveSecondMark = i % 5 === 0;
+            const displayNumber = i === 0 ? 12 : Math.ceil(i / 5);
+            
+            // Tick mark
+            const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            tick.setAttribute('x1', x);
+            tick.setAttribute('y1', 70);
+            tick.setAttribute('x2', x);
+            if (isFiveSecondMark) {
+                tick.setAttribute('y2', 55);
+                tick.setAttribute('stroke', '#333');
+                tick.setAttribute('stroke-width', '2');
+            } else {
+                tick.setAttribute('y2', 63);
+                tick.setAttribute('stroke', '#ccc');
+                tick.setAttribute('stroke-width', '1');
+            }
+            secondTicksGroup.appendChild(tick);
+            
+            // Label for 5-second marks (showing 1-12)
+            if (isFiveSecondMark) {
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('x', x);
+                label.setAttribute('y', 45);
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('class', 'axis-label');
+                label.setAttribute('font-size', '14');
+                label.textContent = displayNumber;
+                label.dataset.number = displayNumber;
+                secondTicksGroup.appendChild(label);
+                secondAxisLabels.push(label);
+
+                // Roman numeral label (initially hidden)
+                const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                romanLabel.setAttribute('x', x);
+                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('text-anchor', 'middle');
+                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.textContent = toRoman(displayNumber);
+                romanLabel.style.display = 'none';
+                secondRomanLabelsGroup.appendChild(romanLabel);
+                secondRomanLabels.push(romanLabel);
+            }
+        }
+
+        function updateRomanNumerals() {
+            // Update analog clock labels
+            clockLabels.forEach(label => {
+                const num = parseInt(label.dataset.number);
+                label.textContent = useRomanNumerals ? toRoman(num) : num;
+            });
+
+            // Show/hide roman labels on axes
+            hourRomanLabels.forEach(label => {
+                label.style.display = useRomanNumerals ? 'block' : 'none';
+            });
+            minuteRomanLabels.forEach(label => {
+                label.style.display = useRomanNumerals ? 'block' : 'none';
+            });
+            secondRomanLabels.forEach(label => {
+                label.style.display = useRomanNumerals ? 'block' : 'none';
+            });
+        }
+
+        function updateTime() {
+            const input = document.getElementById('timeInput');
+            const timeParts = input.value.split(':');
+            const hours = parseInt(timeParts[0]);
+            const minutes = parseInt(timeParts[1]);
+            const seconds = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
+
+            // Update digital clock
+            document.getElementById('digitalTime').textContent = input.value;
+
+            // Update analog clock
+            const hourAngle = ((hours % 12) * 30 + minutes * 0.5 + seconds * (0.5/60) - 90) * Math.PI / 180;
+            const minuteAngle = (minutes * 6 + seconds * 0.1 - 90) * Math.PI / 180;
+            const secondAngle = (seconds * 6 - 90) * Math.PI / 180;
+
+            const hourHand = document.getElementById('hourHand');
+            const minuteHand = document.getElementById('minuteHand');
+            const secondHand = document.getElementById('secondHand');
+
+            hourHand.setAttribute('x2', 100 + Math.cos(hourAngle) * 40);
+            hourHand.setAttribute('y2', 100 + Math.sin(hourAngle) * 40);
+            minuteHand.setAttribute('x2', 100 + Math.cos(minuteAngle) * 60);
+            minuteHand.setAttribute('y2', 100 + Math.sin(minuteAngle) * 60);
+            secondHand.setAttribute('x2', 100 + Math.cos(secondAngle) * 70);
+            secondHand.setAttribute('y2', 100 + Math.sin(secondAngle) * 70);
+
+            // Update hour axis - position based on hour within 12-hour cycle
+            const hourPointer = document.getElementById('hourPointer');
+            const hour12 = hours % 12;
+            const hourWithMinutes = hour12 + (minutes / 60) + (seconds / 3600);
+            const hourPosition = 30 + (hourWithMinutes / 12) * 240;
+            hourPointer.setAttribute('transform', `translate(${hourPosition - 150}, 0)`);
+
+            // Update minute axis - position based on minutes
+            const minutePointer = document.getElementById('minutePointer');
+            const minuteWithSeconds = minutes + (seconds / 60);
+            const minutePosition = 30 + (minuteWithSeconds / 60) * 240;
+            minutePointer.setAttribute('transform', `translate(${minutePosition - 150}, 0)`);
+
+            // Update second axis - position based on seconds
+            const secondPointer = document.getElementById('secondPointer');
+            const secondPosition = 30 + (seconds / 60) * 240;
+            secondPointer.setAttribute('transform', `translate(${secondPosition - 150}, 0)`);
+        }
+
+        function updateToCurrentTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('timeInput').value = `${hours}:${minutes}:${seconds}`;
+            updateTime();
+        }
+
+        // Listen for input changes
+        document.getElementById('timeInput').addEventListener('input', updateTime);
+
+        // Listen for live checkbox changes
+        document.getElementById('liveCheckbox').addEventListener('change', function(e) {
+            if (e.target.checked) {
+                // Start live mode
+                updateToCurrentTime();
+                liveInterval = setInterval(updateToCurrentTime, 1000);
+                document.getElementById('timeInput').disabled = true;
+            } else {
+                // Stop live mode
+                if (liveInterval) {
+                    clearInterval(liveInterval);
+                    liveInterval = null;
+                }
+                document.getElementById('timeInput').disabled = false;
+            }
+        });
+
+        // Listen for roman numerals checkbox changes
+        document.getElementById('romanCheckbox').addEventListener('change', function(e) {
+            useRomanNumerals = e.target.checked;
+            updateRomanNumerals();
+        });
+
+        // Initialize on load
+        updateTime();
+    </script>
+</body>
+</html>
