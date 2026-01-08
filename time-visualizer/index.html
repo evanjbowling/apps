@@ -333,6 +333,7 @@
         let useRomanNumerals = false;
         let currentSpeed = 1;
         let lastUpdateTime = Date.now();
+        let accumulatedSeconds = 0; // Track fractional seconds
 
         // Roman numeral conversion
         function toRoman(num) {
@@ -651,28 +652,41 @@
             const timeParts = input.value.split(':');
             let hours = parseInt(timeParts[0]);
             let minutes = parseInt(timeParts[1]);
-            let seconds = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
+            let seconds = parseInt(timeParts[2] || '0');
 
             // Calculate how much time has passed since last update
             const now = Date.now();
             const elapsed = (now - lastUpdateTime) / 1000; // in seconds
             lastUpdateTime = now;
 
-            // Advance time based on speed (handle fractional seconds)
-            const secondsToAdd = elapsed * currentSpeed;
+            // Add to accumulated seconds based on speed
+            accumulatedSeconds += elapsed * currentSpeed;
             
-            // Convert current time to total seconds
-            let totalSeconds = hours * 3600 + minutes * 60 + seconds;
-            totalSeconds += secondsToAdd;
-            
-            // Convert back to hours, minutes, seconds
-            hours = Math.floor(totalSeconds / 3600) % 24;
-            minutes = Math.floor((totalSeconds % 3600) / 60);
-            seconds = Math.floor(totalSeconds % 60);
+            // Only update display when we've accumulated at least 1 second
+            if (accumulatedSeconds >= 1) {
+                const secondsToAdd = Math.floor(accumulatedSeconds);
+                accumulatedSeconds -= secondsToAdd; // Keep the fractional part
+                
+                // Add seconds
+                seconds += secondsToAdd;
+                
+                // Handle overflow
+                if (seconds >= 60) {
+                    minutes += Math.floor(seconds / 60);
+                    seconds = seconds % 60;
+                }
+                if (minutes >= 60) {
+                    hours += Math.floor(minutes / 60);
+                    minutes = minutes % 60;
+                }
+                if (hours >= 24) {
+                    hours = hours % 24;
+                }
 
-            const newTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            document.getElementById('timeInput').value = newTime;
-            updateTime();
+                const newTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                document.getElementById('timeInput').value = newTime;
+                updateTime();
+            }
         }
 
         function startUpdating() {
@@ -682,10 +696,9 @@
             
             if (currentSpeed > 0) {
                 lastUpdateTime = Date.now();
-                // For speeds < 10x, update every 100ms for smooth animation
-                // For higher speeds, update more frequently
-                const updateFrequency = currentSpeed >= 10 ? 50 : 100;
-                updateInterval = setInterval(advanceTime, updateFrequency);
+                accumulatedSeconds = 0; // Reset accumulator
+                // Update every 100ms for smooth animation
+                updateInterval = setInterval(advanceTime, 100);
                 document.getElementById('timeInput').disabled = true;
             } else {
                 document.getElementById('timeInput').disabled = false;
