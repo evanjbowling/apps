@@ -349,9 +349,10 @@
                 // Roman numeral label (initially hidden)
                 const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 romanLabel.setAttribute('x', x);
-                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('y', 45);
                 romanLabel.setAttribute('text-anchor', 'middle');
-                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.setAttribute('class', 'axis-label');
+                romanLabel.setAttribute('font-size', '14');
                 romanLabel.textContent = toRoman(hourNumber);
                 romanLabel.style.display = 'none';
                 hourRomanLabelsGroup.appendChild(romanLabel);
@@ -402,9 +403,10 @@
                 // Roman numeral label (initially hidden)
                 const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 romanLabel.setAttribute('x', x);
-                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('y', 45);
                 romanLabel.setAttribute('text-anchor', 'middle');
-                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.setAttribute('class', 'axis-label');
+                romanLabel.setAttribute('font-size', '14');
                 romanLabel.textContent = toRoman(displayNumber);
                 romanLabel.style.display = 'none';
                 minuteRomanLabelsGroup.appendChild(romanLabel);
@@ -454,9 +456,10 @@
                 // Roman numeral label (initially hidden)
                 const romanLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                 romanLabel.setAttribute('x', x);
-                romanLabel.setAttribute('y', 30);
+                romanLabel.setAttribute('y', 45);
                 romanLabel.setAttribute('text-anchor', 'middle');
-                romanLabel.setAttribute('class', 'roman-label');
+                romanLabel.setAttribute('class', 'axis-label');
+                romanLabel.setAttribute('font-size', '14');
                 romanLabel.textContent = toRoman(displayNumber);
                 romanLabel.style.display = 'none';
                 secondRomanLabelsGroup.appendChild(romanLabel);
@@ -471,16 +474,28 @@
                 label.textContent = useRomanNumerals ? toRoman(num) : num;
             });
 
-            // Show/hide roman labels on axes
-            hourRomanLabels.forEach(label => {
-                label.style.display = useRomanNumerals ? 'block' : 'none';
-            });
-            minuteRomanLabels.forEach(label => {
-                label.style.display = useRomanNumerals ? 'block' : 'none';
-            });
-            secondRomanLabels.forEach(label => {
-                label.style.display = useRomanNumerals ? 'block' : 'none';
-            });
+            // Toggle between regular numbers and roman numerals on axes
+            if (useRomanNumerals) {
+                // Hide regular numbers
+                hourAxisLabels.forEach(label => label.style.display = 'none');
+                minuteAxisLabels.forEach(label => label.style.display = 'none');
+                secondAxisLabels.forEach(label => label.style.display = 'none');
+                
+                // Show roman numerals
+                hourRomanLabels.forEach(label => label.style.display = 'block');
+                minuteRomanLabels.forEach(label => label.style.display = 'block');
+                secondRomanLabels.forEach(label => label.style.display = 'block');
+            } else {
+                // Show regular numbers
+                hourAxisLabels.forEach(label => label.style.display = 'block');
+                minuteAxisLabels.forEach(label => label.style.display = 'block');
+                secondAxisLabels.forEach(label => label.style.display = 'block');
+                
+                // Hide roman numerals
+                hourRomanLabels.forEach(label => label.style.display = 'none');
+                minuteRomanLabels.forEach(label => label.style.display = 'none');
+                secondRomanLabels.forEach(label => label.style.display = 'none');
+            }
         }
 
         function updateTime() {
