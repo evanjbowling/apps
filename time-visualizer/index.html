@@ -107,8 +107,9 @@
         .controls {
             margin-top: 20px;
             display: flex;
-            gap: 30px;
+            gap: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .control-item {
@@ -127,6 +128,37 @@
             margin: 0;
             font-size: 16px;
             cursor: pointer;
+        }
+
+        .control-item select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            background: white;
+            transition: border-color 0.3s;
+        }
+
+        .control-item select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .live-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .live-btn:hover {
+            background: #5568d3;
         }
 
         .roman-label {
@@ -194,9 +226,16 @@
                 <label for="timeInput">Enter Time</label>
                 <input type="time" id="timeInput" value="12:00:00" step="1">
                 <div class="controls">
+                    <button class="live-btn" id="liveBtn">Live</button>
                     <div class="control-item">
-                        <input type="checkbox" id="liveCheckbox">
-                        <label for="liveCheckbox">Live (updates every second)</label>
+                        <label for="speedSelect">Update speed:</label>
+                        <select id="speedSelect">
+                            <option value="0">0x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="2">2x</option>
+                            <option value="10">10x</option>
+                            <option value="100">100x</option>
+                        </select>
                     </div>
                     <div class="control-item">
                         <input type="checkbox" id="romanCheckbox">
@@ -290,8 +329,10 @@
     </div>
 
     <script>
-        let liveInterval = null;
+        let updateInterval = null;
         let useRomanNumerals = false;
+        let currentSpeed = 1;
+        let lastUpdateTime = Date.now();
 
         // Roman numeral conversion
         function toRoman(num) {
@@ -601,26 +642,86 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('timeInput').value = `${hours}:${minutes}:${seconds}`;
+            lastUpdateTime = Date.now();
             updateTime();
+        }
+
+        function advanceTime() {
+            const input = document.getElementById('timeInput');
+            const timeParts = input.value.split(':');
+            let hours = parseInt(timeParts[0]);
+            let minutes = parseInt(timeParts[1]);
+            let seconds = timeParts.length > 2 ? parseInt(timeParts[2]) : 0;
+
+            // Calculate how much time has passed since last update
+            const now = Date.now();
+            const elapsed = (now - lastUpdateTime) / 1000; // in seconds
+            lastUpdateTime = now;
+
+            // Advance time based on speed (handle fractional seconds)
+            const secondsToAdd = elapsed * currentSpeed;
+            
+            // Convert current time to total seconds
+            let totalSeconds = hours * 3600 + minutes * 60 + seconds;
+            totalSeconds += secondsToAdd;
+            
+            // Convert back to hours, minutes, seconds
+            hours = Math.floor(totalSeconds / 3600) % 24;
+            minutes = Math.floor((totalSeconds % 3600) / 60);
+            seconds = Math.floor(totalSeconds % 60);
+
+            const newTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timeInput').value = newTime;
+            updateTime();
+        }
+
+        function startUpdating() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            
+            if (currentSpeed > 0) {
+                lastUpdateTime = Date.now();
+                // For speeds < 10x, update every 100ms for smooth animation
+                // For higher speeds, update more frequently
+                const updateFrequency = currentSpeed >= 10 ? 50 : 100;
+                updateInterval = setInterval(advanceTime, updateFrequency);
+                document.getElementById('timeInput').disabled = true;
+            } else {
+                document.getElementById('timeInput').disabled = false;
+            }
+        }
+
+        function stopUpdating() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            document.getElementById('timeInput').disabled = false;
         }
 
         // Listen for input changes
         document.getElementById('timeInput').addEventListener('input', updateTime);
 
-        // Listen for live checkbox changes
-        document.getElementById('liveCheckbox').addEventListener('change', function(e) {
-            if (e.target.checked) {
-                // Start live mode
-                updateToCurrentTime();
-                liveInterval = setInterval(updateToCurrentTime, 1000);
-                document.getElementById('timeInput').disabled = true;
+        // Listen for Live button
+        document.getElementById('liveBtn').addEventListener('click', function() {
+            // Set to current time and 1x speed
+            document.getElementById('speedSelect').value = '1';
+            currentSpeed = 1;
+            updateToCurrentTime();
+            startUpdating();
+        });
+
+        // Listen for speed dropdown changes
+        document.getElementById('speedSelect').addEventListener('change', function(e) {
+            currentSpeed = parseFloat(e.target.value);
+            
+            // If speed is 0, stop updating
+            if (currentSpeed === 0) {
+                stopUpdating();
             } else {
-                // Stop live mode
-                if (liveInterval) {
-                    clearInterval(liveInterval);
-                    liveInterval = null;
-                }
-                document.getElementById('timeInput').disabled = false;
+                // Any other speed, start updating
+                startUpdating();
             }
         });
 
