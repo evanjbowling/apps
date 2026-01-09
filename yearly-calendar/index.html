@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 Calendar with Fiscal Weeks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 9px;
+            padding: 0.3in;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .calendar-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .column {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header-row {
+            display: grid;
+            grid-template-columns: 20px 40px repeat(7, 1fr);
+            gap: 1px;
+            background: #666;
+            color: white;
+            font-weight: bold;
+            font-size: 8px;
+            margin-bottom: 2px;
+            border: 1px solid #666;
+        }
+        
+        .header-cell {
+            text-align: center;
+            padding: 3px 1px;
+            background: #666;
+        }
+        
+        .month-section {
+            display: grid;
+            grid-template-columns: 20px 40px repeat(7, 1fr);
+            gap: 1px;
+            background: #ddd;
+            border: 1px solid #999;
+            border-top: none;
+            margin-bottom: 2px;
+        }
+        
+        .fw-cell {
+            background: #f0f0f0;
+            text-align: center;
+            padding: 2px 1px;
+            font-size: 7px;
+            font-weight: bold;
+        }
+        
+        .month-cell {
+            background: #e8e8e8;
+            text-align: center;
+            padding: 2px 1px;
+            font-size: 7px;
+            font-weight: bold;
+        }
+        
+        .day-cell {
+            background: white;
+            text-align: center;
+            padding: 2px 1px;
+            min-height: 16px;
+            font-size: 9px;
+        }
+        
+        .day-cell.other-month {
+            background: #f5f5f5;
+            color: #ccc;
+        }
+        
+        .day-cell.weekend {
+            background: #f9f9f9;
+        }
+        
+        @media print {
+            body {
+                padding: 0.25in;
+            }
+            @page {
+                margin: 0.25in;
+                size: letter portrait;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>2026 Calendar (Fiscal Weeks)</h1>
+    <div class="calendar-container">
+        <div class="column" id="column1"></div>
+        <div class="column" id="column2"></div>
+    </div>
+
+    <script>
+        const YEAR = 2026;
+        const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        
+        // Calculate fiscal week (assuming fiscal year starts first Sunday of January)
+        function getFiscalWeek(date) {
+            const jan1 = new Date(date.getFullYear(), 0, 1);
+            const firstSunday = new Date(jan1);
+            const dayOfWeek = jan1.getDay();
+            firstSunday.setDate(jan1.getDate() + (dayOfWeek === 0 ? 0 : 7 - dayOfWeek));
+            
+            const diffTime = date - firstSunday;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return Math.floor(diffDays / 7) + 1;
+        }
+        
+        function getMondayOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            return new Date(d.setDate(diff));
+        }
+        
+        function createHeader() {
+            const header = document.createElement('div');
+            header.className = 'header-row';
+            
+            const fwHeader = document.createElement('div');
+            fwHeader.className = 'header-cell';
+            fwHeader.textContent = 'FW';
+            header.appendChild(fwHeader);
+            
+            const monthHeader = document.createElement('div');
+            monthHeader.className = 'header-cell';
+            monthHeader.textContent = 'Month';
+            header.appendChild(monthHeader);
+            
+            DAYS.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'header-cell';
+                dayHeader.textContent = day;
+                header.appendChild(dayHeader);
+            });
+            
+            return header;
+        }
+        
+        function createMergedSection(startMonth, endMonth) {
+            const section = document.createElement('div');
+            section.className = 'month-section';
+            
+            // Start from the first Monday on or before the 1st of startMonth
+            let currentDate = new Date(YEAR, startMonth, 1);
+            currentDate = getMondayOfWeek(currentDate);
+            
+            // End on the last day of endMonth
+            const endDate = new Date(YEAR, endMonth + 1, 0);
+            
+            while (currentDate <= endDate) {
+                // Add FW cell
+                const fwCell = document.createElement('div');
+                fwCell.className = 'fw-cell';
+                fwCell.textContent = getFiscalWeek(currentDate);
+                section.appendChild(fwCell);
+                
+                // Add Month cell (based on Monday's month)
+                const monthCell = document.createElement('div');
+                monthCell.className = 'month-cell';
+                monthCell.textContent = MONTHS[currentDate.getMonth()];
+                section.appendChild(monthCell);
+                
+                // Add 7 day cells for the week
+                for (let i = 0; i < 7; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    
+                    const dayOfWeek = i;
+                    if (dayOfWeek === 5 || dayOfWeek === 6) { // Saturday and Sunday
+                        cell.classList.add('weekend');
+                    }
+                    
+                    const cellDate = new Date(currentDate);
+                    cellDate.setDate(currentDate.getDate() + i);
+                    
+                    // Check if this date is outside our target month range
+                    if (cellDate.getMonth() < startMonth || cellDate.getMonth() > endMonth) {
+                        cell.classList.add('other-month');
+                    }
+                    
+                    cell.textContent = cellDate.getDate();
+                    section.appendChild(cell);
+                }
+                
+                // Move to next Monday
+                currentDate.setDate(currentDate.getDate() + 7);
+            }
+            
+            return section;
+        }
+        
+        const column1 = document.getElementById('column1');
+        const column2 = document.getElementById('column2');
+        
+        // Add headers
+        column1.appendChild(createHeader());
+        column2.appendChild(createHeader());
+        
+        // Add merged months: Jan-Jun in column 1, Jul-Dec in column 2
+        column1.appendChild(createMergedSection(0, 5));  // Jan-Jun
+        column2.appendChild(createMergedSection(6, 11)); // Jul-Dec
+    </script>
+</body>
+</html>
