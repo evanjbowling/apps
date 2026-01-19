@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Year Progress</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+    
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      font-weight: 700;
+    }
+    
+    .progress-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      max-width: 500px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 1.5rem 0;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      transition: width 0.5s ease;
+      border-radius: 15px;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 2rem;
+      gap: 1rem;
+    }
+    
+    .stat {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: 8px;
+      flex: 1;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="percent">0%</h1>
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="daysElapsed">0</div>
+          <div class="stat-label">Days Elapsed</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="daysInYear">0</div>
+          <div class="stat-label">Days in Year</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="daysRemaining">0</div>
+          <div class="stat-label">Days Remaining</div>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; opacity: 0.8; font-size: 0.9rem;" id="leapYear"></div>
+    </div>
+  </div>
+  
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
