@@ -1,7 +1,8 @@
 import { DateTime } from 'luxon';
 
-function getYearProgress() {
-  const now = DateTime.now();
+function getYearProgress(selectedDate) {
+  // Use the selected date or default to now
+  const now = selectedDate || DateTime.now();
   
   const yearStart = now.startOf('year');
   const yearEnd = now.endOf('year');
@@ -23,7 +24,15 @@ function getYearProgress() {
 }
 
 function updateDisplay() {
-  const progress = getYearProgress();
+  const dateInput = document.getElementById('dateInput');
+  const selectedDateStr = dateInput.value;
+  
+  // Parse the selected date or use current date
+  const selectedDate = selectedDateStr 
+    ? DateTime.fromISO(selectedDateStr)
+    : DateTime.now();
+  
+  const progress = getYearProgress(selectedDate);
   
   document.getElementById('percent').textContent = `${progress.percent.toFixed(2)}%`;
   document.getElementById('progressFill').style.width = `${progress.percent}%`;
@@ -33,8 +42,27 @@ function updateDisplay() {
   document.getElementById('leapYear').textContent = progress.isLeapYear ? '🎉 Leap Year!' : '';
 }
 
-// Update immediately
+// Initialize date input with today's date
+function initializeDateInput() {
+  const dateInput = document.getElementById('dateInput');
+  const today = DateTime.now().toISODate(); // Format: YYYY-MM-DD
+  dateInput.value = today;
+  
+  // Add event listener for date changes
+  dateInput.addEventListener('change', updateDisplay);
+}
+
+// Initialize and update immediately
+initializeDateInput();
 updateDisplay();
 
-// Update every hour
-setInterval(updateDisplay, 1000 * 60 * 60);
+// Update every hour (in case the date input is set to today and time passes)
+setInterval(() => {
+  const dateInput = document.getElementById('dateInput');
+  const today = DateTime.now().toISODate();
+  
+  // If the date input is still set to today, update it
+  if (dateInput.value === today) {
+    updateDisplay();
+  }
+}, 1000 * 60 * 60);

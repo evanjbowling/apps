@@ -80,9 +80,48 @@
       font-size: 0.9rem;
       opacity: 0.8;
     }
+    
+    .date-selector {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+    }
+    
+    .date-selector input {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .date-selector input:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .date-selector input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Styling for date input calendar icon */
+    .date-selector input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
+  <div class="date-selector">
+    <input type="date" id="dateInput" />
+  </div>
+  
   <div class="container">
     <h1 id="percent">0%</h1>
     <div class="progress-container">
