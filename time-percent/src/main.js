@@ -120,7 +120,7 @@ function updateDisplay() {
   
   const selectedDatetimeStr = datetimeInput.value;
   const granularity = granularitySelect.value;
-  const precision = parseInt(precisionInput.value) || 2;
+  const precision = precisionInput.value === '' ? 6 : parseInt(precisionInput.value);
   
   // Parse the selected datetime or use current date/time
   const selectedDate = selectedDatetimeStr 
@@ -131,7 +131,10 @@ function updateDisplay() {
   
   // Update percentage with specified precision
   const percentElement = document.getElementById('percent');
-  percentElement.textContent = `${progress.percent.toFixed(precision)}%`;
+  const displayPercent = precision === 0 
+    ? Math.round(progress.percent).toString()
+    : progress.percent.toFixed(precision);
+  percentElement.textContent = `${displayPercent}%`;
   
   // Update tooltip with full precision (only if it changed to avoid resetting tooltip timer)
   const newTitle = `Full precision: ${progress.percent}%`;
