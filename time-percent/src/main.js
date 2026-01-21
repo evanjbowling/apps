@@ -101,24 +101,41 @@ function getYearProgress(selectedDate, granularity) {
   };
 }
 
+function updateDatetimeInput() {
+  const liveCheckbox = document.getElementById('liveCheckbox');
+  const datetimeInput = document.getElementById('datetimeInput');
+  
+  if (liveCheckbox.checked) {
+    const now = DateTime.now();
+    // Format as YYYY-MM-DDTHH:mm:ss for datetime-local input
+    datetimeInput.value = now.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+  }
+}
+
 function updateDisplay() {
-  const dateInput = document.getElementById('dateInput');
+  const datetimeInput = document.getElementById('datetimeInput');
   const granularitySelect = document.getElementById('granularitySelect');
+  const precisionInput = document.getElementById('precisionInput');
+  const liveCheckbox = document.getElementById('liveCheckbox');
   
-  const selectedDateStr = dateInput.value;
+  const selectedDatetimeStr = datetimeInput.value;
   const granularity = granularitySelect.value;
+  const precision = parseInt(precisionInput.value) || 2;
   
-  // Parse the selected date
-  // If it's today, use current time; if it's a past date, use end of that day
-  const today = DateTime.now().toISODate();
-  const selectedDate = selectedDateStr 
-    ? (selectedDateStr === today ? DateTime.now() : DateTime.fromISO(selectedDateStr).endOf('day'))
+  // Parse the selected datetime or use current date/time
+  const selectedDate = selectedDatetimeStr 
+    ? DateTime.fromISO(selectedDatetimeStr)
     : DateTime.now();
   
   const progress = getYearProgress(selectedDate, granularity);
   
-  // Update percentage
-  document.getElementById('percent').textContent = `${progress.percent.toFixed(2)}%`;
+  // Update percentage with specified precision
+  const percentElement = document.getElementById('percent');
+  percentElement.textContent = `${progress.percent.toFixed(precision)}%`;
+  
+  // Update tooltip with full precision (always)
+  percentElement.title = `Full precision: ${progress.percent}%`;
+  
   document.getElementById('progressFill').style.width = `${progress.percent}%`;
   
   // Update stats
@@ -147,40 +164,45 @@ function updateDisplay() {
 
 // Initialize inputs
 function initializeControls() {
-  const dateInput = document.getElementById('dateInput');
+  const datetimeInput = document.getElementById('datetimeInput');
   const granularitySelect = document.getElementById('granularitySelect');
+  const precisionInput = document.getElementById('precisionInput');
+  const liveCheckbox = document.getElementById('liveCheckbox');
   
-  const today = DateTime.now().toISODate(); // Format: YYYY-MM-DD
-  dateInput.value = today;
+  // Set initial datetime to now
+  updateDatetimeInput();
   
   // Add event listeners
-  dateInput.addEventListener('change', updateDisplay);
+  datetimeInput.addEventListener('change', updateDisplay);
   granularitySelect.addEventListener('change', updateDisplay);
+  precisionInput.addEventListener('change', updateDisplay);
+  precisionInput.addEventListener('input', updateDisplay);
+  
+  liveCheckbox.addEventListener('change', () => {
+    datetimeInput.disabled = liveCheckbox.checked;
+    if (liveCheckbox.checked) {
+      updateDatetimeInput();
+      updateDisplay();
+    }
+  });
+  
+  // Set initial disabled state
+  datetimeInput.disabled = liveCheckbox.checked;
 }
 
 // Initialize and update immediately
 initializeControls();
 updateDisplay();
 
-// Update every second when viewing seconds
+// Main update loop - runs every second
 setInterval(() => {
-  const granularitySelect = document.getElementById('granularitySelect');
-  const dateInput = document.getElementById('dateInput');
-  const today = DateTime.now().toISODate();
+  const liveCheckbox = document.getElementById('liveCheckbox');
   
-  // If viewing today and in seconds/minutes granularity, update display
-  if (dateInput.value === today && (granularitySelect.value === 'seconds' || granularitySelect.value === 'minutes')) {
-    updateDisplay();
+  // If live mode is enabled, update the datetime input
+  if (liveCheckbox.checked) {
+    updateDatetimeInput();
   }
+  
+  // Always update the display (for tooltip and live updates)
+  updateDisplay();
 }, 1000);
-
-// Update every minute for hours granularity
-setInterval(() => {
-  const granularitySelect = document.getElementById('granularitySelect');
-  const dateInput = document.getElementById('dateInput');
-  const today = DateTime.now().toISODate();
-  
-  if (dateInput.value === today && granularitySelect.value === 'hours') {
-    updateDisplay();
-  }
-}, 60000);

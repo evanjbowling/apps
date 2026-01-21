@@ -30,6 +30,7 @@
       font-size: 3rem;
       margin-bottom: 2rem;
       font-weight: 700;
+      cursor: help;
     }
     
     .progress-container {
@@ -107,8 +108,15 @@
       align-items: flex-end;
     }
     
-    .controls input,
-    .controls select {
+    .control-group {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    
+    .controls input[type="datetime-local"],
+    .controls select,
+    .controls input[type="number"] {
       padding: 0.75rem 1rem;
       border-radius: 8px;
       border: 2px solid rgba(255, 255, 255, 0.3);
@@ -120,17 +128,24 @@
       transition: all 0.3s ease;
     }
     
-    .controls input:hover,
-    .controls select:hover {
+    .controls input[type="datetime-local"]:hover,
+    .controls select:hover,
+    .controls input[type="number"]:hover {
       background: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
     }
     
-    .controls input:focus,
-    .controls select:focus {
+    .controls input[type="datetime-local"]:focus,
+    .controls select:focus,
+    .controls input[type="number"]:focus {
       outline: none;
       background: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .controls input[type="datetime-local"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     
     .controls select option {
@@ -138,9 +153,42 @@
       color: white;
     }
     
-    .controls input::-webkit-calendar-picker-indicator {
+    .controls input[type="datetime-local"]::-webkit-calendar-picker-indicator {
       filter: invert(1);
       cursor: pointer;
+    }
+    
+    .controls input[type="number"] {
+      width: 80px;
+    }
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+    
+    .checkbox-label:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+      cursor: pointer;
+      width: 18px;
+      height: 18px;
+    }
+    
+    .control-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      white-space: nowrap;
     }
     
     @media (max-width: 768px) {
@@ -149,25 +197,40 @@
         top: 0;
         right: 0;
         margin-bottom: 2rem;
-        flex-direction: row;
-        justify-content: center;
+        align-items: stretch;
+      }
+      
+      .control-group {
+        flex-direction: column;
+        align-items: stretch;
       }
     }
   </style>
 </head>
 <body>
   <div class="controls">
-    <input type="date" id="dateInput" />
+    <label class="checkbox-label">
+      <input type="checkbox" id="liveCheckbox" checked />
+      <span>Live Update</span>
+    </label>
+    
+    <input type="datetime-local" id="datetimeInput" step="1" />
+    
     <select id="granularitySelect">
       <option value="days">Days</option>
       <option value="hours">Hours</option>
       <option value="minutes">Minutes</option>
       <option value="seconds">Seconds</option>
     </select>
+    
+    <div class="control-group">
+      <span class="control-label">Precision:</span>
+      <input type="number" id="precisionInput" min="0" max="15" value="2" />
+    </div>
   </div>
   
   <div class="container">
-    <h1 id="percent">0%</h1>
+    <h1 id="percent" title="">0%</h1>
     <div class="progress-container">
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
