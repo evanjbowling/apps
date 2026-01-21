@@ -1,42 +1,12 @@
 import { DateTime } from 'luxon';
 
-function formatBreakdown(totalSeconds) {
+function calculateBreakdown(totalSeconds) {
   const days = Math.floor(totalSeconds / 86400);
   const hours = Math.floor((totalSeconds % 86400) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   
-  const parts = [];
-  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
-  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-  if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-  if (seconds > 0 || parts.length === 0) parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
-  
-  return parts.join(', ');
-}
-
-function formatBreakdownMinutes(totalMinutes) {
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = Math.floor(totalMinutes % 60);
-  
-  const parts = [];
-  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
-  if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-  if (minutes > 0 || parts.length === 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-  
-  return parts.join(', ');
-}
-
-function formatBreakdownHours(totalHours) {
-  const days = Math.floor(totalHours / 24);
-  const hours = Math.floor(totalHours % 24);
-  
-  const parts = [];
-  if (days > 0) parts.push(`${days} day${days !== 1 ? 's' : ''}`);
-  if (hours > 0 || parts.length === 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-  
-  return parts.join(', ');
+  return { days, hours, minutes, seconds };
 }
 
 function getYearProgress(selectedDate, granularity) {
@@ -52,40 +22,27 @@ function getYearProgress(selectedDate, granularity) {
   
   const percentComplete = (elapsedSeconds / totalSeconds) * 100;
   
-  let elapsed, total, remaining, breakdown, showBreakdown;
+  // Calculate breakdowns (always)
+  const elapsedBreakdown = calculateBreakdown(elapsedSeconds);
+  const remainingBreakdown = calculateBreakdown(remainingSeconds);
+  
+  let elapsed, total, remaining;
   
   switch (granularity) {
     case 'days':
       elapsed = Math.floor(elapsedSeconds / 86400);
       total = Math.ceil(totalSeconds / 86400);
       remaining = Math.ceil(remainingSeconds / 86400);
-      showBreakdown = false;
       break;
       
     case 'hours':
-      const totalHours = Math.floor(elapsedSeconds / 3600);
-      elapsed = totalHours;
-      total = Math.ceil(totalSeconds / 3600);
-      remaining = Math.ceil(remainingSeconds / 3600);
-      breakdown = formatBreakdownHours(totalHours);
-      showBreakdown = true;
-      break;
-      
     case 'minutes':
-      const totalMinutes = Math.floor(elapsedSeconds / 60);
-      elapsed = totalMinutes;
-      total = Math.ceil(totalSeconds / 60);
-      remaining = Math.ceil(remainingSeconds / 60);
-      breakdown = formatBreakdownMinutes(totalMinutes);
-      showBreakdown = true;
-      break;
-      
     case 'seconds':
-      elapsed = Math.floor(elapsedSeconds);
-      total = Math.ceil(totalSeconds);
-      remaining = Math.ceil(remainingSeconds);
-      breakdown = formatBreakdown(elapsedSeconds);
-      showBreakdown = true;
+      // Calculate base units
+      const divisor = granularity === 'hours' ? 3600 : (granularity === 'minutes' ? 60 : 1);
+      elapsed = Math.floor(elapsedSeconds / divisor);
+      total = Math.ceil(totalSeconds / divisor);
+      remaining = Math.ceil(remainingSeconds / divisor);
       break;
   }
   
@@ -94,8 +51,8 @@ function getYearProgress(selectedDate, granularity) {
     elapsed,
     total,
     remaining,
-    breakdown,
-    showBreakdown,
+    elapsedBreakdown,
+    remainingBreakdown,
     isLeapYear: now.isInLeapYear,
     granularity
   };
@@ -149,20 +106,22 @@ function updateDisplay() {
   document.getElementById('total').textContent = progress.total.toLocaleString();
   document.getElementById('remaining').textContent = progress.remaining.toLocaleString();
   
-  // Update labels
+  // Update labels (just the unit)
   const unitLabel = granularity.charAt(0).toUpperCase() + granularity.slice(1);
-  document.getElementById('elapsedLabel').textContent = `${unitLabel} Elapsed`;
-  document.getElementById('totalLabel').textContent = `${unitLabel} in Year`;
-  document.getElementById('remainingLabel').textContent = `${unitLabel} Remaining`;
+  document.getElementById('elapsedLabel').textContent = unitLabel;
+  document.getElementById('totalLabel').textContent = unitLabel;
+  document.getElementById('remainingLabel').textContent = unitLabel;
   
-  // Update breakdown
-  const breakdownDiv = document.getElementById('breakdown');
-  if (progress.showBreakdown) {
-    breakdownDiv.style.display = 'block';
-    document.getElementById('breakdownValue').textContent = progress.breakdown;
-  } else {
-    breakdownDiv.style.display = 'none';
-  }
+  // Always update breakdown tables
+  document.getElementById('elapsedDays').textContent = progress.elapsedBreakdown.days;
+  document.getElementById('elapsedHours').textContent = progress.elapsedBreakdown.hours;
+  document.getElementById('elapsedMinutes').textContent = progress.elapsedBreakdown.minutes;
+  document.getElementById('elapsedSeconds').textContent = progress.elapsedBreakdown.seconds;
+  
+  document.getElementById('remainingDays').textContent = progress.remainingBreakdown.days;
+  document.getElementById('remainingHours').textContent = progress.remainingBreakdown.hours;
+  document.getElementById('remainingMinutes').textContent = progress.remainingBreakdown.minutes;
+  document.getElementById('remainingSeconds').textContent = progress.remainingBreakdown.seconds;
   
   // Update leap year indicator
   document.getElementById('leapYear').textContent = progress.isLeapYear ? '🎉 Leap Year!' : '';
