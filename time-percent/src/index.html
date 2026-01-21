@@ -37,7 +37,7 @@
       border-radius: 10px;
       padding: 2rem;
       backdrop-filter: blur(10px);
-      max-width: 500px;
+      max-width: 600px;
     }
     
     .progress-bar {
@@ -61,6 +61,7 @@
       justify-content: space-around;
       margin-top: 2rem;
       gap: 1rem;
+      flex-wrap: wrap;
     }
     
     .stat {
@@ -68,6 +69,7 @@
       padding: 1rem;
       border-radius: 8px;
       flex: 1;
+      min-width: 150px;
     }
     
     .stat-value {
@@ -81,13 +83,32 @@
       opacity: 0.8;
     }
     
-    .date-selector {
+    .breakdown {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    .breakdown-label {
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+    }
+    
+    .controls {
       position: fixed;
       top: 2rem;
       right: 2rem;
+      display: flex;
+      gap: 1rem;
+      flex-direction: column;
+      align-items: flex-end;
     }
     
-    .date-selector input {
+    .controls input,
+    .controls select {
       padding: 0.75rem 1rem;
       border-radius: 8px;
       border: 2px solid rgba(255, 255, 255, 0.3);
@@ -99,27 +120,50 @@
       transition: all 0.3s ease;
     }
     
-    .date-selector input:hover {
+    .controls input:hover,
+    .controls select:hover {
       background: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.5);
     }
     
-    .date-selector input:focus {
+    .controls input:focus,
+    .controls select:focus {
       outline: none;
       background: rgba(255, 255, 255, 0.2);
       border-color: rgba(255, 255, 255, 0.6);
     }
     
-    /* Styling for date input calendar icon */
-    .date-selector input::-webkit-calendar-picker-indicator {
+    .controls select option {
+      background: #667eea;
+      color: white;
+    }
+    
+    .controls input::-webkit-calendar-picker-indicator {
       filter: invert(1);
       cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+      .controls {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 2rem;
+        flex-direction: row;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="date-selector">
+  <div class="controls">
     <input type="date" id="dateInput" />
+    <select id="granularitySelect">
+      <option value="days">Days</option>
+      <option value="hours">Hours</option>
+      <option value="minutes">Minutes</option>
+      <option value="seconds">Seconds</option>
+    </select>
   </div>
   
   <div class="container">
@@ -130,17 +174,21 @@
       </div>
       <div class="stats">
         <div class="stat">
-          <div class="stat-value" id="daysElapsed">0</div>
-          <div class="stat-label">Days Elapsed</div>
+          <div class="stat-value" id="elapsed">0</div>
+          <div class="stat-label" id="elapsedLabel">Elapsed</div>
         </div>
         <div class="stat">
-          <div class="stat-value" id="daysInYear">0</div>
-          <div class="stat-label">Days in Year</div>
+          <div class="stat-value" id="total">0</div>
+          <div class="stat-label" id="totalLabel">Total</div>
         </div>
         <div class="stat">
-          <div class="stat-value" id="daysRemaining">0</div>
-          <div class="stat-label">Days Remaining</div>
+          <div class="stat-value" id="remaining">0</div>
+          <div class="stat-label" id="remainingLabel">Remaining</div>
         </div>
+      </div>
+      <div id="breakdown" class="breakdown" style="display: none;">
+        <div class="breakdown-label">Breakdown:</div>
+        <div id="breakdownValue"></div>
       </div>
       <div style="margin-top: 1rem; opacity: 0.8; font-size: 0.9rem;" id="leapYear"></div>
     </div>
