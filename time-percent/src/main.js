@@ -99,7 +99,10 @@ function updateDisplay() {
     percentElement.title = newTitle;
   }
   
-  document.getElementById('progressFill').style.width = `${progress.percent}%`;
+  // Update slider position and track gradient
+  const progressSlider = document.getElementById('progressSlider');
+  progressSlider.value = progress.percent;
+  progressSlider.style.setProperty('--progress', `${progress.percent}%`);
   
   // Update stats
   document.getElementById('elapsed').textContent = progress.elapsed.toLocaleString();
@@ -133,6 +136,7 @@ function initializeControls() {
   const granularitySelect = document.getElementById('granularitySelect');
   const precisionInput = document.getElementById('precisionInput');
   const liveCheckbox = document.getElementById('liveCheckbox');
+  const progressSlider = document.getElementById('progressSlider');
   
   // Set initial datetime to now
   updateDatetimeInput();
@@ -149,6 +153,28 @@ function initializeControls() {
       updateDatetimeInput();
       updateDisplay();
     }
+  });
+  
+  // Slider event handler
+  progressSlider.addEventListener('input', (e) => {
+    // Uncheck live mode
+    liveCheckbox.checked = false;
+    datetimeInput.disabled = false;
+    
+    // Calculate the datetime based on slider percentage
+    const percent = parseFloat(e.target.value);
+    const now = DateTime.now();
+    const yearStart = now.startOf('year');
+    const yearEnd = now.endOf('year');
+    const totalSeconds = yearEnd.diff(yearStart, 'seconds').seconds;
+    const targetSeconds = (percent / 100) * totalSeconds;
+    const targetDate = yearStart.plus({ seconds: targetSeconds });
+    
+    // Update datetime input
+    datetimeInput.value = targetDate.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+    
+    // Update display
+    updateDisplay();
   });
   
   // Set initial disabled state
