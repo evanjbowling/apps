@@ -133,8 +133,11 @@ function updateDisplay() {
   const percentElement = document.getElementById('percent');
   percentElement.textContent = `${progress.percent.toFixed(precision)}%`;
   
-  // Update tooltip with full precision (always)
-  percentElement.title = `Full precision: ${progress.percent}%`;
+  // Update tooltip with full precision (only if it changed to avoid resetting tooltip timer)
+  const newTitle = `Full precision: ${progress.percent}%`;
+  if (percentElement.title !== newTitle) {
+    percentElement.title = newTitle;
+  }
   
   document.getElementById('progressFill').style.width = `${progress.percent}%`;
   
