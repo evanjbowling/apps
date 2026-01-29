@@ -143,6 +143,32 @@
       cursor: help;
     }
     
+    #percent {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      font-weight: 700;
+      cursor: text;
+      background: transparent;
+      border: none;
+      padding: 0.5rem 1rem;
+      color: white;
+      text-align: center;
+      width: auto;
+      min-width: 200px;
+      transition: all 0.3s ease;
+    }
+    
+    #percent:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+    }
+    
+    #percent:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+    }
+    
     .progress-container {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 10px;
@@ -335,7 +361,7 @@
       </div>
     </div>
     
-    <h1 id="percent" title="">0%</h1>
+    <input type="text" id="percent" title="" value="0%" />
     
     <div class="progress-container">
       <div class="progress-slider-container">

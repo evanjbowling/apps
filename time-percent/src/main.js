@@ -86,12 +86,14 @@ function updateDisplay() {
   
   const progress = getYearProgress(selectedDate, granularity);
   
-  // Update percentage with specified precision
+  // Update percentage with specified precision (only if not currently focused)
   const percentElement = document.getElementById('percent');
-  const displayPercent = precision === 0 
-    ? Math.round(progress.percent).toString()
-    : progress.percent.toFixed(precision);
-  percentElement.textContent = `${displayPercent}%`;
+  if (document.activeElement !== percentElement) {
+    const displayPercent = precision === 0 
+      ? Math.round(progress.percent).toString()
+      : progress.percent.toFixed(precision);
+    percentElement.value = `${displayPercent}%`;
+  }
   
   // Update tooltip with full precision (only if it changed to avoid resetting tooltip timer)
   const newTitle = `Full precision: ${progress.percent}%`;
@@ -174,6 +176,50 @@ function initializeControls() {
     datetimeInput.value = targetDate.toFormat("yyyy-MM-dd'T'HH:mm:ss");
     
     // Update display
+    updateDisplay();
+  });
+  
+  // Percentage input event handler
+  const percentInput = document.getElementById('percent');
+  
+  // Select all text when focused
+  percentInput.addEventListener('focus', () => {
+    percentInput.select();
+  });
+  
+  percentInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      // Parse the input - remove % sign and any whitespace
+      const inputValue = percentInput.value.replace(/[%\s]/g, '');
+      const percent = parseFloat(inputValue);
+      
+      if (!isNaN(percent) && percent >= 0 && percent <= 100) {
+        // Uncheck live mode
+        liveCheckbox.checked = false;
+        datetimeInput.disabled = false;
+        
+        // Calculate the datetime based on percentage
+        const now = DateTime.now();
+        const yearStart = now.startOf('year');
+        const yearEnd = now.endOf('year');
+        const totalSeconds = yearEnd.diff(yearStart, 'seconds').seconds;
+        const targetSeconds = (percent / 100) * totalSeconds;
+        const targetDate = yearStart.plus({ seconds: targetSeconds });
+        
+        // Update datetime input
+        datetimeInput.value = targetDate.toFormat("yyyy-MM-dd'T'HH:mm:ss");
+        
+        // Update display
+        updateDisplay();
+      } else {
+        // Invalid input, revert to current value
+        updateDisplay();
+      }
+    }
+  });
+  
+  // Also handle blur event to revert invalid input
+  percentInput.addEventListener('blur', () => {
     updateDisplay();
   });
   
